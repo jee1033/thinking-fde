@@ -634,6 +634,7 @@ tr.urgency-green td:first-child { box-shadow: inset 3px 0 0 var(--urgency-green)
   gap: 4px;
   margin-top: 16px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -2607,5 +2608,709 @@ footer {
 
   .arch-connector-actions {
     flex-wrap: wrap;
+  }
+}
+
+/* ══════════════════════════════════════════
+   온톨로지 탭 (Ontology Tab)
+   ══════════════════════════════════════════ */
+
+.onto-intro {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ── Schema Grid ── */
+.onto-schema-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.onto-type-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.onto-type-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.onto-type-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.onto-type-name {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-h);
+}
+
+.onto-type-eng {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.onto-type-count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+/* ── Property List ── */
+.onto-type-props {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.onto-prop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.onto-prop-computed {
+  background: color-mix(in srgb, var(--accent-light) 60%, transparent);
+  border-left: 2px solid var(--accent);
+}
+
+.onto-prop-name {
+  font-weight: 600;
+  color: var(--text-h);
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.onto-prop-type {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.onto-prop-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.onto-prop-rule {
+  width: 100%;
+  font-size: 0.68rem;
+  color: var(--accent);
+  margin-top: 2px;
+  padding-left: 4px;
+}
+
+/* ── Links ── */
+.onto-links {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.onto-links-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+.onto-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onto-link-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.onto-link-from,
+.onto-link-to {
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.onto-link-arrow {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+  padding: 2px 8px;
+  background: var(--accent-light);
+  border-radius: 10px;
+}
+
+.onto-link-method {
+  margin-left: auto;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+/* ── Business Rules ── */
+.onto-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onto-rule-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.onto-rule-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.onto-rule-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.onto-rule-dist {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.onto-dist-item {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+/* Tier colors */
+.onto-tier-S { background: #fef3c7; color: #92400e; }
+.onto-tier-A { background: #dcfce7; color: #166534; }
+.onto-tier-B { background: #dbeafe; color: #1e40af; }
+.onto-tier-C { background: #f3f4f6; color: #6b7280; }
+.onto-tier-D { background: #fee2e2; color: #991b1b; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-tier-S { background: #713f12; color: #fde68a; }
+  .onto-tier-A { background: #14532d; color: #86efac; }
+  .onto-tier-B { background: #1e3a5f; color: #93c5fd; }
+  .onto-tier-C { background: #1f2937; color: #9ca3af; }
+  .onto-tier-D { background: #7f1d1d; color: #fca5a5; }
+}
+
+/* Risk colors */
+.onto-risk-safe { background: #dcfce7; color: #166534; }
+.onto-risk-caution { background: #fef9c3; color: #854d0e; }
+.onto-risk-danger { background: #fee2e2; color: #991b1b; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-risk-safe { background: #14532d; color: #86efac; }
+  .onto-risk-caution { background: #713f12; color: #fde68a; }
+  .onto-risk-danger { background: #7f1d1d; color: #fca5a5; }
+}
+
+/* ── Ontology Explorer ── */
+.onto-explorer {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.onto-explorer-select {
+  margin-bottom: 20px;
+}
+
+.onto-explorer-select select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.onto-seller-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.onto-detail-section {
+  padding: 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.onto-detail-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-h);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onto-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.onto-detail-item {
+  font-size: 0.82rem;
+  color: var(--text);
+  padding: 4px 0;
+}
+
+.onto-detail-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 6px;
+}
+
+/* Computed row */
+.onto-computed-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.onto-computed-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.onto-computed-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.onto-computed-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.onto-score-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.onto-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.onto-score-fill.onto-risk-safe { background: #22c55e; }
+.onto-score-fill.onto-risk-caution { background: #f59e0b; }
+.onto-score-fill.onto-risk-danger { background: #ef4444; }
+.onto-score-fill.onto-health { background: #22c55e; }
+
+.onto-tier-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+/* Can terminate badge */
+.onto-can-terminate {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.onto-can-yes { background: #dcfce7; color: #166534; }
+.onto-can-no { background: #fee2e2; color: #991b1b; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-can-yes { background: #14532d; color: #86efac; }
+  .onto-can-no { background: #7f1d1d; color: #fca5a5; }
+}
+
+/* ── Checklist ── */
+.onto-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onto-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.onto-check-pass {
+  background: color-mix(in srgb, var(--active-bg) 50%, transparent);
+}
+
+.onto-check-fail {
+  background: color-mix(in srgb, var(--terminated-bg) 50%, transparent);
+}
+
+.onto-check-icon {
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.onto-check-pass .onto-check-icon { color: #22c55e; }
+.onto-check-fail .onto-check-icon { color: #ef4444; }
+
+.onto-check-name {
+  font-weight: 600;
+  color: var(--text-h);
+  min-width: 120px;
+}
+
+.onto-check-detail {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* ── Linked Objects ── */
+.onto-linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onto-linked-card {
+  padding: 10px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.onto-linked-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.onto-linked-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.onto-linked-warning {
+  font-size: 0.72rem;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.onto-linked-compact {
+  gap: 4px;
+}
+
+.onto-linked-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+}
+
+.onto-linked-inline span {
+  font-size: 0.8rem;
+}
+
+/* Settlement status */
+.onto-settlement-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.onto-settle-done { background: #dcfce7; color: #166534; }
+.onto-settle-pending { background: #fef9c3; color: #854d0e; }
+.onto-settle-dispute { background: #fee2e2; color: #991b1b; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-settle-done { background: #14532d; color: #86efac; }
+  .onto-settle-pending { background: #713f12; color: #fde68a; }
+  .onto-settle-dispute { background: #7f1d1d; color: #fca5a5; }
+}
+
+/* Product status */
+.onto-product-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+.onto-prod-active { background: #dcfce7; color: #166534; }
+.onto-prod-soldout { background: #fef9c3; color: #854d0e; }
+.onto-prod-stopped { background: #f3f4f6; color: #6b7280; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-prod-active { background: #14532d; color: #86efac; }
+  .onto-prod-soldout { background: #713f12; color: #fde68a; }
+  .onto-prod-stopped { background: #1f2937; color: #9ca3af; }
+}
+
+/* Approval status */
+.onto-approval-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.onto-appr-approved { background: #dcfce7; color: #166534; }
+.onto-appr-rejected { background: #fee2e2; color: #991b1b; }
+.onto-appr-pending { background: #fef9c3; color: #854d0e; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-appr-approved { background: #14532d; color: #86efac; }
+  .onto-appr-rejected { background: #7f1d1d; color: #fca5a5; }
+  .onto-appr-pending { background: #713f12; color: #fde68a; }
+}
+
+/* Legal notice status */
+.onto-notice-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.onto-notice-confirmed { background: #dcfce7; color: #166534; }
+.onto-notice-sent { background: #dbeafe; color: #1e40af; }
+.onto-notice-preparing { background: #f3f4f6; color: #6b7280; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-notice-confirmed { background: #14532d; color: #86efac; }
+  .onto-notice-sent { background: #1e3a5f; color: #93c5fd; }
+  .onto-notice-preparing { background: #1f2937; color: #9ca3af; }
+}
+
+/* Dispute status */
+.onto-dispute-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.onto-disp-active { background: #fef9c3; color: #854d0e; }
+.onto-disp-approved { background: #dcfce7; color: #166534; }
+.onto-disp-rejected { background: #f3f4f6; color: #6b7280; }
+
+@media (prefers-color-scheme: dark) {
+  .onto-disp-active { background: #713f12; color: #fde68a; }
+  .onto-disp-approved { background: #14532d; color: #86efac; }
+  .onto-disp-rejected { background: #1f2937; color: #9ca3af; }
+}
+
+/* ── Action Simulator ── */
+.onto-action-sim {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.onto-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.onto-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.onto-action-label {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-h);
+  min-width: 100px;
+}
+
+.onto-action-row select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.onto-action-target-info {
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 10px 14px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+
+.onto-action-target-label {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.onto-action-conditions {
+  margin-bottom: 16px;
+}
+
+.onto-conditions-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-h);
+  margin-bottom: 10px;
+}
+
+.onto-conditions-result {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.onto-cond-pass {
+  background: var(--active-bg);
+  color: var(--active-text);
+}
+
+.onto-cond-fail {
+  background: var(--terminated-bg);
+  color: var(--terminated-text);
+}
+
+.onto-action-exec {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.onto-result-success {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #22c55e;
+  padding: 6px 14px;
+  background: var(--active-bg);
+  border-radius: var(--radius-sm);
+}
+
+.onto-result-fail {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ef4444;
+  padding: 6px 14px;
+  background: var(--terminated-bg);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Ontology Tab Responsive ── */
+@media (max-width: 640px) {
+  .onto-schema-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onto-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onto-computed-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .onto-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .onto-action-label {
+    min-width: auto;
   }
 }
