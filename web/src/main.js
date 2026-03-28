@@ -3,10 +3,12 @@ import { sellers, contracts } from './data.js';
 import { OntologyStore } from './ontology.js';
 import { runAIPRules, applySuggestion } from './aip-logic.js';
 import { TerminationWorkflowEngine } from './workflow.js';
+import { legacySystems, legacySteps, LegacySimulation } from './legacy.js';
 
 // ── Ontology Store 초기화 ──
 const store = new OntologyStore(sellers, contracts);
 const workflowEngine = new TerminationWorkflowEngine(store);
+const legacySim = new LegacySimulation();
 
 // ── 유틸 ──
 const fmt = (n) => n.toLocaleString('ko-KR');
@@ -65,13 +67,14 @@ function render() {
         <span class="concept-tag">Workshop: Dashboard</span>
       </div>
       <nav class="tab-bar">
+        <button class="tab-btn ${activeTab === 'legacy' ? 'active' : ''}" data-tab="legacy">기존 시스템</button>
         <button class="tab-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">대시보드</button>
         <button class="tab-btn ${activeTab === 'workflow' ? 'active' : ''}" data-tab="workflow">해지 워크플로우</button>
       </nav>
     </header>
 
     <main>
-      ${activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
+      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
     </main>
 
     <footer>
@@ -404,6 +407,149 @@ function renderSuggestion(s, index) {
   `;
 }
 
+// ── 레거시 시스템 탭 ──
+function renderLegacyTab() {
+  const isStarted = legacySim.isStarted();
+  const isComplete = legacySim.isComplete();
+
+  return `
+    <section class="section">
+      <div class="section-header">
+        <h2>기존 운영 시스템</h2>
+        <span class="concept-tag">Before Palantir</span>
+      </div>
+      <p class="legacy-intro">해지 프로세스를 처리하기 위해 담당자가 접속해야 하는 시스템들입니다.</p>
+
+      <!-- 시스템 맵 -->
+      <div class="legacy-systems">
+        ${legacySystems.map((sys) => `
+          <div class="legacy-sys-card ${legacySim.activeSystem === sys.id ? 'legacy-sys-active' : ''} ${legacySim.completedSteps.some((i) => legacySteps[i]?.system === sys.id) ? 'legacy-sys-done' : ''}">
+            <div class="legacy-sys-icon" style="background: ${sys.color}">${sys.icon}</div>
+            <div class="legacy-sys-info">
+              <div class="legacy-sys-name">${sys.name}</div>
+              <div class="legacy-sys-desc">${sys.description}</div>
+              <div class="legacy-sys-url">${sys.url}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <!-- 해지 프로세스 시뮬레이션 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>해지 프로세스 시뮬레이션</h2>
+        <span class="concept-tag">As-Is Flow</span>
+      </div>
+
+      ${!isStarted ? `
+        <div class="legacy-start">
+          <p>"코지홈데코" 판매자의 해지를 기존 시스템으로 처리해봅니다.</p>
+          <button class="btn btn-primary" id="legacy-start-btn">시뮬레이션 시작</button>
+        </div>
+      ` : ''}
+
+      ${isStarted ? `
+        <div class="legacy-process">
+          <!-- 단계 목록 -->
+          <div class="legacy-steps">
+            ${legacySteps.map((step, i) => {
+              const isCurrent = i === legacySim.currentStep;
+              const isDone = legacySim.completedSteps.includes(i);
+              const sys = legacySystems.find((s) => s.id === step.system);
+              return `
+                <div class="legacy-step ${isCurrent ? 'legacy-step-current' : ''} ${isDone ? 'legacy-step-done' : ''}">
+                  <div class="legacy-step-header">
+                    <span class="legacy-step-num ${isDone ? 'done' : isCurrent ? 'current' : ''}">${isDone ? '✓' : step.step}</span>
+                    <span class="legacy-step-title">${step.title}</span>
+                    <span class="legacy-sys-tag" style="border-color: ${sys.color}; color: ${sys.color}">${sys.name}</span>
+                  </div>
+
+                  ${isCurrent || isDone ? `
+                    <div class="legacy-step-detail">
+                      <div class="legacy-actions-list">
+                        ${step.actions.map((a) => `<div class="legacy-action-item">${a}</div>`).join('')}
+                      </div>
+                      <div class="legacy-step-meta">
+                        <div class="legacy-pain"><strong>Pain Point:</strong> ${step.pain}</div>
+                        <div class="legacy-time"><strong>소요 시간:</strong> ${step.time}</div>
+                      </div>
+                    </div>
+                  ` : ''}
+
+                  ${isCurrent && !isComplete ? `
+                    <div class="legacy-step-action">
+                      <button class="btn btn-primary" data-legacy-action="complete">이 단계 완료 → 다음 시스템으로</button>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${isComplete ? `
+            <div class="legacy-complete">
+              <div class="legacy-complete-header">프로세스 완료</div>
+              <div class="legacy-complete-summary">
+                <div class="legacy-stat">
+                  <div class="legacy-stat-value">6개</div>
+                  <div class="legacy-stat-label">사용 시스템</div>
+                </div>
+                <div class="legacy-stat">
+                  <div class="legacy-stat-value">5~7주</div>
+                  <div class="legacy-stat-label">총 소요기간</div>
+                </div>
+                <div class="legacy-stat">
+                  <div class="legacy-stat-value">3~4명</div>
+                  <div class="legacy-stat-label">관련 담당자</div>
+                </div>
+                <div class="legacy-stat">
+                  <div class="legacy-stat-value">수작업</div>
+                  <div class="legacy-stat-label">이력 관리</div>
+                </div>
+              </div>
+              <div class="legacy-vs">
+                <div class="legacy-vs-title">vs. Palantir 적용 시</div>
+                <div class="legacy-complete-summary">
+                  <div class="legacy-stat legacy-stat-new">
+                    <div class="legacy-stat-value">1개</div>
+                    <div class="legacy-stat-label">Workshop 대시보드</div>
+                  </div>
+                  <div class="legacy-stat legacy-stat-new">
+                    <div class="legacy-stat-value">1~2일</div>
+                    <div class="legacy-stat-label">총 소요기간</div>
+                  </div>
+                  <div class="legacy-stat legacy-stat-new">
+                    <div class="legacy-stat-value">1명</div>
+                    <div class="legacy-stat-label">담당자</div>
+                  </div>
+                  <div class="legacy-stat legacy-stat-new">
+                    <div class="legacy-stat-value">자동</div>
+                    <div class="legacy-stat-label">이력 관리</div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-muted" id="legacy-reset-btn">시뮬레이션 초기화</button>
+              <button class="btn btn-primary" id="legacy-goto-wf-btn">Palantir 워크플로우 보기 →</button>
+            </div>
+          ` : ''}
+
+          <!-- 활동 로그 -->
+          <div class="legacy-log">
+            <div class="legacy-log-title">활동 로그</div>
+            ${legacySim.logs.map((l) => `
+              <div class="legacy-log-entry">
+                <span class="legacy-log-time">${l.time}</span>
+                <span class="legacy-log-msg">${l.msg}</span>
+              </div>
+            `).reverse().join('')}
+          </div>
+        </div>
+      ` : ''}
+    </section>
+  `;
+}
+
 // ── 이벤트 바인딩 ──
 function bindEvents() {
   // 탭 전환
@@ -474,6 +620,29 @@ function bindEvents() {
       workflowEngine.createWorkflow(sellerId, contractId);
       render();
     });
+  }
+
+  // 레거시: 시작
+  const legacyStartBtn = document.getElementById('legacy-start-btn');
+  if (legacyStartBtn) {
+    legacyStartBtn.addEventListener('click', () => { legacySim.start(); render(); });
+  }
+
+  // 레거시: 단계 완료
+  document.querySelectorAll('[data-legacy-action="complete"]').forEach((btn) => {
+    btn.addEventListener('click', () => { legacySim.completeCurrentStep(); render(); });
+  });
+
+  // 레거시: 초기화
+  const legacyResetBtn = document.getElementById('legacy-reset-btn');
+  if (legacyResetBtn) {
+    legacyResetBtn.addEventListener('click', () => { legacySim.reset(); render(); });
+  }
+
+  // 레거시: 워크플로우로 이동
+  const legacyGotoBtn = document.getElementById('legacy-goto-wf-btn');
+  if (legacyGotoBtn) {
+    legacyGotoBtn.addEventListener('click', () => { activeTab = 'workflow'; render(); });
   }
 
   // 워크플로우: 액션
