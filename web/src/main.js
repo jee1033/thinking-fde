@@ -4,11 +4,13 @@ import { OntologyStore } from './ontology.js';
 import { runAIPRules, applySuggestion } from './aip-logic.js';
 import { TerminationWorkflowEngine } from './workflow.js';
 import { legacySystems, legacySteps, LegacySimulation } from './legacy.js';
+import { connectors, workflowIntegrations, IntegrationMonitor } from './integration.js';
 
 // ── Ontology Store 초기화 ──
 const store = new OntologyStore(sellers, contracts);
 const workflowEngine = new TerminationWorkflowEngine(store);
 const legacySim = new LegacySimulation();
+const integrationMonitor = new IntegrationMonitor();
 
 // ── 유틸 ──
 const fmt = (n) => n.toLocaleString('ko-KR');
@@ -68,13 +70,14 @@ function render() {
       </div>
       <nav class="tab-bar">
         <button class="tab-btn ${activeTab === 'legacy' ? 'active' : ''}" data-tab="legacy">기존 시스템</button>
+        <button class="tab-btn ${activeTab === 'integration' ? 'active' : ''}" data-tab="integration">연동 아키텍처</button>
         <button class="tab-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">대시보드</button>
         <button class="tab-btn ${activeTab === 'workflow' ? 'active' : ''}" data-tab="workflow">해지 워크플로우</button>
       </nav>
     </header>
 
     <main>
-      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
+      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'integration' ? renderIntegrationTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
     </main>
 
     <footer>
@@ -407,6 +410,237 @@ function renderSuggestion(s, index) {
   `;
 }
 
+// ── 연동 아키텍처 탭 ──
+function renderIntegrationTab() {
+  const allConnectors = integrationMonitor.getAll();
+  const activeConnectors = allConnectors.filter((c) => c.status !== 'replaced');
+
+  const statusLabel = { connected: '연결됨', syncing: '동기화중', error: '오류', pending: '대기', replaced: '대체됨' };
+  const directionLabel = { read: 'Read', write: 'Write', 'read-write': 'Read/Write', none: '-' };
+  const directionArrow = { read: '←', write: '→', 'read-write': '↔', none: '—' };
+
+  return `
+    <!-- 1. Integration Architecture Diagram -->
+    <section class="section">
+      <div class="section-header">
+        <h2>연동 아키텍처</h2>
+        <span class="concept-tag">Foundry: Connector</span>
+      </div>
+      <div class="intg-diagram">
+        <div class="intg-spokes">
+          ${allConnectors.map((c) => `
+            <div class="intg-spoke intg-spoke-${c.status}">
+              <div class="intg-spoke-system">
+                <div class="intg-spoke-name">${c.system}</div>
+                <div class="intg-spoke-type">${c.type}</div>
+                ${c.priority ? `<span class="intg-priority intg-priority-${c.priority}">${c.priority}순위</span>` : ''}
+              </div>
+              <div class="intg-spoke-connector">
+                <span class="intg-arrow intg-dir-${c.direction}">${directionArrow[c.direction]}</span>
+                <span class="intg-status-dot intg-dot-${c.status}"></span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="intg-center">
+          <div class="intg-center-icon">O</div>
+          <div class="intg-center-label">Ontology</div>
+          <div class="intg-center-sub">Foundry</div>
+        </div>
+        <div class="intg-legend">
+          <div class="intg-legend-item"><span class="intg-status-dot intg-dot-connected"></span> 연결됨</div>
+          <div class="intg-legend-item"><span class="intg-status-dot intg-dot-syncing"></span> 동기화중</div>
+          <div class="intg-legend-item"><span class="intg-status-dot intg-dot-error"></span> 오류</div>
+          <div class="intg-legend-item"><span class="intg-status-dot intg-dot-pending"></span> 대기</div>
+          <div class="intg-legend-item"><span class="intg-status-dot intg-dot-replaced"></span> 대체됨</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Connector Detail Cards -->
+    <section class="section">
+      <div class="section-header">
+        <h2>커넥터 상세</h2>
+        <span class="concept-tag">Connector Detail</span>
+      </div>
+      <div class="intg-connectors">
+        ${activeConnectors.map((c) => `
+          <div class="intg-connector-card intg-card-${c.status}">
+            <div class="intg-connector-header">
+              <div class="intg-connector-title">
+                <span class="intg-connector-name">${c.system}</span>
+                <span class="intg-dir-badge intg-dir-${c.direction}">${directionLabel[c.direction]}</span>
+                ${c.priority ? `<span class="intg-priority intg-priority-${c.priority}">${c.priority}순위</span>` : ''}
+              </div>
+              <div class="intg-connector-status-wrap">
+                <span class="intg-status-badge intg-badge-${c.status}">${statusLabel[c.status]}</span>
+                <button class="btn btn-sm intg-toggle-btn" data-intg-toggle="${c.id}">상태 변경</button>
+              </div>
+            </div>
+            <div class="intg-connector-body">
+              <div class="intg-connector-meta">
+                <div class="intg-meta-item"><span class="intg-meta-label">타입</span> ${c.type}</div>
+                <div class="intg-meta-item"><span class="intg-meta-label">엔드포인트</span> <code>${c.endpoint}</code></div>
+                <div class="intg-meta-item"><span class="intg-meta-label">동기화 주기</span> ${c.syncInterval}</div>
+              </div>
+              <div class="intg-connector-mapping">
+                ${c.ontologyMapping.read.length > 0 ? `
+                  <div class="intg-mapping-group">
+                    <div class="intg-mapping-title intg-mapping-read">Read 필드</div>
+                    <div class="intg-mapping-fields">
+                      ${c.ontologyMapping.read.map((f) => `<span class="intg-field">${f}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+                ${c.ontologyMapping.write.length > 0 ? `
+                  <div class="intg-mapping-group">
+                    <div class="intg-mapping-title intg-mapping-write">Write 액션</div>
+                    <div class="intg-mapping-fields">
+                      ${c.ontologyMapping.write.map((f) => `<span class="intg-field intg-field-write">${f}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <!-- 3. Workflow Integration Map -->
+    <section class="section">
+      <div class="section-header">
+        <h2>워크플로우 연동 맵</h2>
+        <span class="concept-tag">Data Flow</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table intg-flow-table">
+          <thead>
+            <tr>
+              <th>워크플로우 단계</th>
+              <th>데이터 소스 (From)</th>
+              <th>데이터 대상 (To)</th>
+              <th>데이터 흐름</th>
+              <th>자동화 수준</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workflowIntegrations.map((wi) => {
+              const sourceNames = wi.sources.map((id) => {
+                const c = allConnectors.find((x) => x.id === id);
+                return c ? c.system : id;
+              });
+              const targetNames = wi.targets.map((id) => {
+                const c = allConnectors.find((x) => x.id === id);
+                return c ? c.system : id;
+              });
+              const autoClass = wi.automationLevel.startsWith('자동') ? 'intg-auto-full' : 'intg-auto-semi';
+              return `
+                <tr>
+                  <td><strong>${wi.step}</strong></td>
+                  <td>${sourceNames.length > 0 ? sourceNames.map((n) => `<span class="intg-sys-badge">${n}</span>`).join(' ') : '<span class="intg-sys-none">-</span>'}</td>
+                  <td>${targetNames.length > 0 ? targetNames.map((n) => `<span class="intg-sys-badge intg-sys-badge-write">${n}</span>`).join(' ') : '<span class="intg-sys-none">-</span>'}</td>
+                  <td class="intg-flow-desc">${wi.dataFlow}</td>
+                  <td><span class="intg-auto-badge ${autoClass}">${wi.automationLevel}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. Integration Priority Roadmap -->
+    <section class="section">
+      <div class="section-header">
+        <h2>연동 우선순위 로드맵</h2>
+        <span class="concept-tag">Roadmap</span>
+      </div>
+      <div class="intg-roadmap">
+        <div class="intg-phase intg-phase-1">
+          <div class="intg-phase-header">
+            <span class="intg-phase-badge intg-phase-badge-1">Phase 1</span>
+            <span class="intg-phase-priority intg-priority-1">1순위</span>
+          </div>
+          <div class="intg-phase-title">어드민 + 정산</div>
+          <div class="intg-phase-goal">해지 조건 체크 자동화</div>
+          <div class="intg-phase-systems">
+            <span class="intg-sys-badge">어드민 백오피스</span>
+            <span class="intg-sys-badge">정산 시스템</span>
+          </div>
+          <div class="intg-phase-impact">
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">자동화 범위</span>
+              <span class="intg-impact-value">판매자 조회 + 미정산 확인 + 해지 대상 선정</span>
+            </div>
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">예상 효과</span>
+              <span class="intg-impact-value">수작업 1~2시간 → 자동 실행 (0분)</span>
+            </div>
+          </div>
+          <div class="intg-phase-progress">
+            <div class="intg-phase-progress-bar" style="width: 100%"></div>
+            <span class="intg-phase-progress-label">완료</span>
+          </div>
+        </div>
+
+        <div class="intg-phase intg-phase-2">
+          <div class="intg-phase-header">
+            <span class="intg-phase-badge intg-phase-badge-2">Phase 2</span>
+            <span class="intg-phase-priority intg-priority-2">2순위</span>
+          </div>
+          <div class="intg-phase-title">그룹웨어 + Jira</div>
+          <div class="intg-phase-goal">워크플로우 전체 자동 라우팅</div>
+          <div class="intg-phase-systems">
+            <span class="intg-sys-badge">그룹웨어 전자결재</span>
+            <span class="intg-sys-badge">법무 요청 (Jira)</span>
+          </div>
+          <div class="intg-phase-impact">
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">자동화 범위</span>
+              <span class="intg-impact-value">전자결재 기안 자동 생성 + Jira 티켓 자동 생성 + 결과 연동</span>
+            </div>
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">예상 효과</span>
+              <span class="intg-impact-value">기안/티켓 작성 30분+3일 → 자동 생성 (0분)</span>
+            </div>
+          </div>
+          <div class="intg-phase-progress">
+            <div class="intg-phase-progress-bar" style="width: 40%"></div>
+            <span class="intg-phase-progress-label">진행중 40%</span>
+          </div>
+        </div>
+
+        <div class="intg-phase intg-phase-3">
+          <div class="intg-phase-header">
+            <span class="intg-phase-badge intg-phase-badge-3">Phase 3</span>
+            <span class="intg-phase-priority intg-priority-3">3순위</span>
+          </div>
+          <div class="intg-phase-title">CS 시스템</div>
+          <div class="intg-phase-goal">이의제기 기간 관리 자동화</div>
+          <div class="intg-phase-systems">
+            <span class="intg-sys-badge">CS 시스템</span>
+          </div>
+          <div class="intg-phase-impact">
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">자동화 범위</span>
+              <span class="intg-impact-value">이의제기 접수 자동 감지 + 30일 타이머 + 해지 확정 자동 트리거</span>
+            </div>
+            <div class="intg-impact-item">
+              <span class="intg-impact-label">예상 효과</span>
+              <span class="intg-impact-value">수시 수동 확인 → 자동 감지 + 알림</span>
+            </div>
+          </div>
+          <div class="intg-phase-progress">
+            <div class="intg-phase-progress-bar" style="width: 0%"></div>
+            <span class="intg-phase-progress-label">예정</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 // ── 레거시 시스템 탭 ──
 function renderLegacyTab() {
   const isStarted = legacySim.isStarted();
@@ -622,6 +856,14 @@ function bindEvents() {
     });
   }
 
+  // 연동: 상태 토글
+  document.querySelectorAll('[data-intg-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      integrationMonitor.toggleStatus(btn.dataset.intgToggle);
+      render();
+    });
+  });
+
   // 레거시: 시작
   const legacyStartBtn = document.getElementById('legacy-start-btn');
   if (legacyStartBtn) {
@@ -644,6 +886,14 @@ function bindEvents() {
   if (legacyGotoBtn) {
     legacyGotoBtn.addEventListener('click', () => { activeTab = 'workflow'; render(); });
   }
+
+  // 연동 아키텍처: 상태 토글
+  document.querySelectorAll('[data-intg-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      integrationMonitor.toggleStatus(btn.dataset.intgToggle);
+      render();
+    });
+  });
 
   // 워크플로우: 액션
   document.querySelectorAll('[data-wf-action]').forEach((btn) => {
