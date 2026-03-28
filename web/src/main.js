@@ -1,5 +1,5 @@
 import './style.css';
-import { sellers, contracts } from './data.js';
+import { sellers, contracts, settlements, salesRecords, products, approvals, legalNotices, disputes } from './data.js';
 import { OntologyStore } from './ontology.js';
 import { runAIPRules, applySuggestion } from './aip-logic.js';
 import { TerminationWorkflowEngine } from './workflow.js';
@@ -9,7 +9,7 @@ import { ConnectorManager } from './connectors.js';
 import { DataPipeline } from './pipeline.js';
 
 // ── Ontology Store 초기화 ──
-const store = new OntologyStore(sellers, contracts);
+const store = new OntologyStore(sellers, contracts, settlements, salesRecords, products, approvals, legalNotices, disputes);
 const workflowEngine = new TerminationWorkflowEngine(store);
 const legacySim = new LegacySimulation();
 const integrationMonitor = new IntegrationMonitor();
@@ -87,13 +87,14 @@ function render() {
         <button class="tab-btn ${activeTab === 'legacy' ? 'active' : ''}" data-tab="legacy">기존 시스템</button>
         <button class="tab-btn ${activeTab === 'integration' ? 'active' : ''}" data-tab="integration">연동 아키텍처</button>
         <button class="tab-btn ${activeTab === 'architecture' ? 'active' : ''}" data-tab="architecture">내부 아키텍처</button>
+        <button class="tab-btn ${activeTab === 'ontology' ? 'active' : ''}" data-tab="ontology">온톨로지</button>
         <button class="tab-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">대시보드</button>
         <button class="tab-btn ${activeTab === 'workflow' ? 'active' : ''}" data-tab="workflow">해지 워크플로우</button>
       </nav>
     </header>
 
     <main>
-      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'integration' ? renderIntegrationTab() : activeTab === 'architecture' ? renderArchitectureTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
+      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'integration' ? renderIntegrationTab() : activeTab === 'architecture' ? renderArchitectureTab() : activeTab === 'ontology' ? renderOntologyTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
     </main>
 
     <footer>
@@ -1016,6 +1017,522 @@ function renderLegacyTab() {
   `;
 }
 
+// ── 온톨로지 탭 상태 ──
+let ontologySelectedSeller = 'S001';
+let ontologyActionType = 'terminate';
+let ontologyActionTarget = '';
+
+// ── 온톨로지 탭 ──
+function renderOntologyTab() {
+  const schema = store.getSchema();
+  const allSellers = store.getAllSellers();
+  const riskDist = store.getRiskDistribution();
+  const tierCounts = store.getTierCounts();
+  const selectedSeller = store.getSeller(ontologySelectedSeller);
+
+  return `
+    <!-- Section 1: 온톨로지 스키마 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>온톨로지 스키마</h2>
+        <span class="concept-tag">Foundry: Ontology</span>
+      </div>
+      <p class="onto-intro">Ontology는 비즈니스 데이터를 Object Type, Link, Computed Property로 모델링합니다.</p>
+      <div class="onto-schema-grid">
+        ${schema.objectTypes.map((ot) => `
+          <div class="onto-type-card">
+            <div class="onto-type-header">
+              <span class="onto-type-name">${ot.label}</span>
+              <span class="onto-type-eng">${ot.name}</span>
+              <span class="onto-type-count">${ot.count}건</span>
+            </div>
+            <div class="onto-type-props">
+              ${ot.properties.map((p) => `
+                <div class="onto-prop ${p.computed ? 'onto-prop-computed' : ''}">
+                  <span class="onto-prop-name">${p.name}</span>
+                  <span class="onto-prop-type">${p.type}${p.values ? ` (${p.values})` : ''}</span>
+                  ${p.computed ? `<span class="onto-prop-badge">computed</span>` : ''}
+                  ${p.rule ? `<div class="onto-prop-rule">${p.rule}</div>` : ''}
+                </div>
+              `).join('')}
+              ${ot.computedBooleans.map((cb) => `
+                <div class="onto-prop onto-prop-computed">
+                  <span class="onto-prop-name">${cb.name}</span>
+                  <span class="onto-prop-type">boolean</span>
+                  <span class="onto-prop-badge">computed</span>
+                  <div class="onto-prop-rule">${cb.rule}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="onto-links">
+        <div class="onto-links-title">Link Types (관계)</div>
+        <div class="onto-links-list">
+          ${schema.links.map((l) => `
+            <div class="onto-link-item">
+              <span class="onto-link-from">${l.from}</span>
+              <span class="onto-link-arrow">${l.type === '1:N' ? '1 → N' : '1 → 1'}</span>
+              <span class="onto-link-to">${l.to}</span>
+              <code class="onto-link-method">${l.method}()</code>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: 비즈니스 규칙 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>비즈니스 규칙</h2>
+        <span class="concept-tag">Computed Properties</span>
+      </div>
+      <div class="onto-rules">
+        <div class="onto-rule-card">
+          <div class="onto-rule-name">Seller.tier (판매자 등급)</div>
+          <div class="onto-rule-desc">월매출 기반: S(5천만+), A(3천만+), B(1천만+), C(500만+), D(500만 미만)</div>
+          <div class="onto-rule-dist">
+            ${Object.entries(tierCounts).map(([tier, count]) => `
+              <span class="onto-dist-item onto-tier-${tier}">${tier}: ${count}명</span>
+            `).join('')}
+          </div>
+        </div>
+        <div class="onto-rule-card">
+          <div class="onto-rule-name">Seller.riskScore (위험 점수)</div>
+          <div class="onto-rule-desc">미정산 비율(30%) + 반품률(25%) + 매출추세(20%) + 판매일경과(15%) + 이의제기(10%)</div>
+          <div class="onto-rule-dist">
+            <span class="onto-dist-item onto-risk-safe">안전 (0~29): ${riskDist.safe}명</span>
+            <span class="onto-dist-item onto-risk-caution">주의 (30~59): ${riskDist.caution}명</span>
+            <span class="onto-dist-item onto-risk-danger">위험 (60+): ${riskDist.danger}명</span>
+          </div>
+        </div>
+        <div class="onto-rule-card">
+          <div class="onto-rule-name">Seller.canTerminate (해지 가능 여부)</div>
+          <div class="onto-rule-desc">미정산 0 + 진행중 이의제기 없음 + 대기 결재 없음</div>
+          <div class="onto-rule-dist">
+            <span class="onto-dist-item onto-risk-safe">해지 가능: ${allSellers.filter((s) => store.canTerminate(s.id).result).length}명</span>
+            <span class="onto-dist-item onto-risk-danger">해지 불가: ${allSellers.filter((s) => !store.canTerminate(s.id).result).length}명</span>
+          </div>
+        </div>
+        <div class="onto-rule-card">
+          <div class="onto-rule-name">Seller.isDormantCandidate (휴면 후보)</div>
+          <div class="onto-rule-desc">활성 상태 + 마지막 판매 90일 이상 경과</div>
+          <div class="onto-rule-dist">
+            <span class="onto-dist-item onto-risk-caution">휴면 후보: ${allSellers.filter((s) => store.isDormantCandidate(s.id)).length}명</span>
+          </div>
+        </div>
+        <div class="onto-rule-card">
+          <div class="onto-rule-name">Contract.isCommissionValid (수수료 유효성)</div>
+          <div class="onto-rule-desc">등급별 범위: S(5~8%), A(7~10%), B(9~12%), C(11~14%), D(13~16%)</div>
+          <div class="onto-rule-dist">
+            <span class="onto-dist-item onto-risk-safe">적정: ${store.getAllContracts().filter((c) => c.status !== '종료' && store.isCommissionValid(c.id).valid).length}건</span>
+            <span class="onto-dist-item onto-risk-danger">범위 초과: ${store.getAllContracts().filter((c) => c.status !== '종료' && !store.isCommissionValid(c.id).valid).length}건</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: 판매자 상세 (Ontology Explorer) -->
+    <section class="section">
+      <div class="section-header">
+        <h2>판매자 상세 (Ontology Explorer)</h2>
+        <span class="concept-tag">Ontology: Explorer</span>
+      </div>
+      <div class="onto-explorer">
+        <div class="onto-explorer-select">
+          <select id="onto-seller-select">
+            ${allSellers.map((s) => `
+              <option value="${s.id}" ${s.id === ontologySelectedSeller ? 'selected' : ''}>${s.name} (${s.id}) - ${s.status}</option>
+            `).join('')}
+          </select>
+        </div>
+        ${selectedSeller ? renderOntologyExplorer(selectedSeller) : '<p class="empty-msg">판매자를 선택해주세요.</p>'}
+      </div>
+    </section>
+
+    <!-- Section 4: Action 시뮬레이터 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Action 시뮬레이터</h2>
+        <span class="concept-tag">Ontology: Action</span>
+      </div>
+      ${renderActionSimulator()}
+    </section>
+  `;
+}
+
+function renderOntologyExplorer(seller) {
+  const contracts = store.getContractsForSeller(seller.id);
+  const settlements = store.getSettlementsForSeller(seller.id);
+  const sales = store.getSalesForSeller(seller.id);
+  const prods = store.getProductsForSeller(seller.id);
+  const canTerm = store.canTerminate(seller.id);
+  const tier = seller.tier || 'D';
+  const risk = seller.riskScore || 0;
+  const health = seller.healthScore || (100 - risk);
+
+  // Through contracts: approvals, legal notices, disputes
+  const allApprovals = contracts.flatMap((c) => store.getApprovalsForContract(c.id));
+  const allNotices = contracts.map((c) => store.getLegalNoticeForContract(c.id)).filter(Boolean);
+  const allDisputes = store.getDisputesForSeller(seller.id);
+
+  const riskClass = risk < 30 ? 'onto-risk-safe' : risk < 60 ? 'onto-risk-caution' : 'onto-risk-danger';
+
+  return `
+    <div class="onto-seller-detail">
+      <!-- 기본 정보 + Computed -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">판매자 정보</div>
+        <div class="onto-detail-grid">
+          <div class="onto-detail-item"><span class="onto-detail-label">이름</span> ${seller.name}</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">카테고리</span> <span class="cat-tag">${seller.category}</span></div>
+          <div class="onto-detail-item"><span class="onto-detail-label">상태</span> <span class="badge ${statusBadgeClass(seller.status)}">${seller.status}</span></div>
+          <div class="onto-detail-item"><span class="onto-detail-label">등급</span> <span class="onto-tier-badge onto-tier-${tier}">${tier}</span></div>
+          <div class="onto-detail-item"><span class="onto-detail-label">월매출</span> ${fmtWon(seller.monthlySales)}</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">미정산</span> ${seller.unsettledAmount > 0 ? `<span class="unsettled-badge">${fmtWon(seller.unsettledAmount)}</span>` : '0원'}</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">가입일</span> ${seller.joinDate}</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">최근판매</span> ${seller.lastSaleDate} (${store.daysSinceLastSale(seller)}일 전)</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">이메일</span> ${seller.contactEmail || '-'}</div>
+          <div class="onto-detail-item"><span class="onto-detail-label">사업자번호</span> ${seller.businessNumber || '-'}</div>
+        </div>
+        <div class="onto-computed-row">
+          <div class="onto-computed-item">
+            <span class="onto-computed-label">위험점수</span>
+            <div class="onto-score-bar"><div class="onto-score-fill ${riskClass}" style="width: ${risk}%"></div></div>
+            <span class="onto-computed-value ${riskClass}">${risk}/100</span>
+          </div>
+          <div class="onto-computed-item">
+            <span class="onto-computed-label">건강점수</span>
+            <div class="onto-score-bar"><div class="onto-score-fill onto-health" style="width: ${health}%"></div></div>
+            <span class="onto-computed-value onto-health">${health}/100</span>
+          </div>
+          <div class="onto-computed-item">
+            <span class="onto-computed-label">휴면 후보</span>
+            <span class="onto-computed-value">${store.isDormantCandidate(seller.id) ? '예' : '아니오'}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 해지 가능 여부 체크리스트 -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">해지 가능 여부 <span class="onto-can-terminate ${canTerm.result ? 'onto-can-yes' : 'onto-can-no'}">${canTerm.result ? '가능' : '불가'}</span></div>
+        <div class="onto-checklist">
+          ${canTerm.conditions.map((c) => `
+            <div class="onto-check-item ${c.passed ? 'onto-check-pass' : 'onto-check-fail'}">
+              <span class="onto-check-icon">${c.passed ? '●' : '●'}</span>
+              <span class="onto-check-name">${c.name}</span>
+              <span class="onto-check-detail">${c.detail}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Linked: Contracts -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">계약 (${contracts.length}건)</div>
+        ${contracts.length > 0 ? `
+          <div class="onto-linked-list">
+            ${contracts.map((c) => {
+              const commValid = store.isCommissionValid(c.id);
+              return `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${c.id}</span>
+                  <span class="contract-status ${contractStatusClass(c.status)}">${c.status}</span>
+                  <span class="cat-tag">${c.type}</span>
+                </div>
+                <div class="onto-linked-meta">
+                  수수료 ${c.commissionRate}% | ${c.startDate} ~ ${c.endDate}
+                  ${c.autoRenewal ? ' | 자동갱신' : ''}
+                  ${c.penaltyClause ? ' | 위약금조항' : ''}
+                </div>
+                <div class="onto-linked-meta">
+                  수수료 유효성: <span class="${commValid.valid ? 'onto-risk-safe' : 'onto-risk-danger'}">${commValid.reason}</span>
+                </div>
+                ${store.isExpiringSoon(c.id) ? '<div class="onto-linked-warning">만료 임박 (30일 이내)</div>' : ''}
+              </div>
+            `}).join('')}
+          </div>
+        ` : '<p class="empty-msg">계약 없음</p>'}
+      </div>
+
+      <!-- Linked: Settlements -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">정산 (${settlements.length}건)</div>
+        ${settlements.length > 0 ? `
+          <div class="onto-linked-list">
+            ${settlements.map((s) => `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${s.period}</span>
+                  <span class="onto-settlement-status onto-settle-${s.status === '정산완료' ? 'done' : s.status === '미정산' ? 'pending' : 'dispute'}">${s.status}</span>
+                </div>
+                <div class="onto-linked-meta">
+                  매출 ${fmtWon(s.totalSales)} | 수수료 ${fmtWon(s.commissionAmount)} | 정산금 ${fmtWon(s.netAmount)}
+                  ${s.settledDate ? ` | ${s.settledDate}` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">정산 내역 없음</p>'}
+      </div>
+
+      <!-- Linked: Products -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">상품 (${prods.length}건)</div>
+        ${prods.length > 0 ? `
+          <div class="onto-linked-list onto-linked-compact">
+            ${prods.map((p) => `
+              <div class="onto-linked-card onto-linked-inline">
+                <span>${p.name}</span>
+                <span>${fmt(p.price)}원</span>
+                <span class="onto-product-status onto-prod-${p.status === '판매중' ? 'active' : p.status === '품절' ? 'soldout' : 'stopped'}">${p.status}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">상품 없음</p>'}
+      </div>
+
+      <!-- Linked: Sales Records -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">매출기록 (${sales.length}건)</div>
+        ${sales.length > 0 ? `
+          <div class="onto-linked-list">
+            ${sales.map((s) => `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${s.period}</span>
+                  <span>주문 ${fmt(s.orderCount)}건</span>
+                  <span>반품 ${fmt(s.returnCount)}건 (${s.returnRate}%)</span>
+                </div>
+                <div class="onto-linked-meta">매출 ${fmtWon(s.totalAmount)}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">매출기록 없음</p>'}
+      </div>
+
+      <!-- Through Contract: Approvals -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">결재 (${allApprovals.length}건)</div>
+        ${allApprovals.length > 0 ? `
+          <div class="onto-linked-list">
+            ${allApprovals.map((a) => `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${a.id} (${a.contractId})</span>
+                  <span class="cat-tag">${a.type}</span>
+                  <span class="onto-approval-status onto-appr-${a.status === '승인' ? 'approved' : a.status === '반려' ? 'rejected' : 'pending'}">${a.status}</span>
+                </div>
+                <div class="onto-linked-meta">
+                  요청: ${a.requestedBy} (${a.requestedDate})
+                  ${a.approvedBy ? ` | 승인: ${a.approvedBy} (${a.completedDate})` : ''}
+                </div>
+                <div class="onto-linked-meta">${a.reason}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">결재 내역 없음</p>'}
+      </div>
+
+      <!-- Through Contract: Legal Notices -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">내용증명 (${allNotices.length}건)</div>
+        ${allNotices.length > 0 ? `
+          <div class="onto-linked-list">
+            ${allNotices.map((l) => `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${l.id} (${l.contractId})</span>
+                  <span class="cat-tag">${l.type}</span>
+                  <span class="onto-notice-status onto-notice-${l.status === '수신확인' ? 'confirmed' : l.status === '발송완료' ? 'sent' : 'preparing'}">${l.status}</span>
+                </div>
+                <div class="onto-linked-meta">
+                  ${l.sentDate ? `발송: ${l.sentDate}` : '발송 전'}
+                  ${l.receivedDate ? ` | 수신: ${l.receivedDate}` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">내용증명 없음</p>'}
+      </div>
+
+      <!-- Through Contract: Disputes -->
+      <div class="onto-detail-section">
+        <div class="onto-detail-title">이의제기 (${allDisputes.length}건)</div>
+        ${allDisputes.length > 0 ? `
+          <div class="onto-linked-list">
+            ${allDisputes.map((dp) => `
+              <div class="onto-linked-card">
+                <div class="onto-linked-header">
+                  <span>${dp.id} (${dp.contractId})</span>
+                  <span class="onto-dispute-status onto-disp-${dp.status === '기각' ? 'rejected' : dp.status === '승인' ? 'approved' : 'active'}">${dp.status}</span>
+                </div>
+                <div class="onto-linked-meta">${dp.reason}</div>
+                <div class="onto-linked-meta">
+                  접수: ${dp.filedDate}
+                  ${dp.resolvedDate ? ` | 해결: ${dp.resolvedDate}` : ''}
+                  ${dp.resolution ? ` | ${dp.resolution}` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p class="empty-msg">이의제기 없음</p>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderActionSimulator() {
+  const allSellers = store.getAllSellers();
+  const allContracts = store.getAllContracts();
+
+  let conditionsHtml = '';
+  let targetLabel = '';
+
+  if (ontologyActionType === 'terminate' && ontologyActionTarget) {
+    const check = store.checkTerminationConditions(ontologyActionTarget);
+    const contract = store.contracts.get(ontologyActionTarget);
+    const seller = contract ? store.getSeller(contract.sellerId) : null;
+    targetLabel = contract ? `${seller?.name || contract.sellerId} - ${ontologyActionTarget}` : '';
+    conditionsHtml = renderConditionChecklist(check.conditions, check.allPassed);
+  } else if (ontologyActionType === 'renew' && ontologyActionTarget) {
+    const check = store.checkRenewalConditions(ontologyActionTarget);
+    const contract = store.contracts.get(ontologyActionTarget);
+    const seller = contract ? store.getSeller(contract.sellerId) : null;
+    targetLabel = contract ? `${seller?.name || contract.sellerId} - ${ontologyActionTarget}` : '';
+    conditionsHtml = renderConditionChecklist(check.conditions, check.allPassed);
+  } else if (ontologyActionType === 'status' && ontologyActionTarget) {
+    const check = store.checkStatusChangeConditions(ontologyActionTarget, '해지');
+    const seller = store.getSeller(ontologyActionTarget);
+    targetLabel = seller ? `${seller.name} (${ontologyActionTarget})` : '';
+    conditionsHtml = renderConditionChecklist(check.conditions, check.allPassed);
+  }
+
+  return `
+    <div class="onto-action-sim">
+      <div class="onto-action-form">
+        <div class="onto-action-row">
+          <label class="onto-action-label">Action 선택</label>
+          <select id="onto-action-type">
+            <option value="terminate" ${ontologyActionType === 'terminate' ? 'selected' : ''}>계약 해지 (terminateContract)</option>
+            <option value="renew" ${ontologyActionType === 'renew' ? 'selected' : ''}>계약 갱신 (renewContract)</option>
+            <option value="status" ${ontologyActionType === 'status' ? 'selected' : ''}>상태 변경 (updateSellerStatus)</option>
+          </select>
+        </div>
+        <div class="onto-action-row">
+          <label class="onto-action-label">대상 선택</label>
+          ${ontologyActionType === 'status' ? `
+            <select id="onto-action-target">
+              <option value="">선택...</option>
+              ${allSellers.filter((s) => s.status !== '해지').map((s) => `
+                <option value="${s.id}" ${ontologyActionTarget === s.id ? 'selected' : ''}>${s.name} (${s.id}) - ${s.status}</option>
+              `).join('')}
+            </select>
+          ` : `
+            <select id="onto-action-target">
+              <option value="">선택...</option>
+              ${allContracts.filter((c) => c.status !== '종료').map((c) => {
+                const seller = store.getSeller(c.sellerId);
+                return `<option value="${c.id}" ${ontologyActionTarget === c.id ? 'selected' : ''}>${seller?.name || c.sellerId} - ${c.id} (${c.status})</option>`;
+              }).join('')}
+            </select>
+          `}
+        </div>
+      </div>
+
+      ${ontologyActionTarget ? `
+        <div class="onto-action-target-info">
+          <span class="onto-action-target-label">대상:</span> ${targetLabel}
+        </div>
+        <div class="onto-action-conditions">
+          <div class="onto-conditions-title">사전 조건 체크</div>
+          ${conditionsHtml}
+        </div>
+        <div class="onto-action-exec">
+          <button class="btn btn-primary" id="onto-action-execute-btn">
+            ${ontologyActionType === 'terminate' ? '해지 실행' : ontologyActionType === 'renew' ? '갱신 실행' : '상태 변경 (해지)'}
+          </button>
+          <div id="onto-action-result"></div>
+        </div>
+      ` : '<p class="empty-msg">대상을 선택하면 사전 조건 체크 결과가 표시됩니다.</p>'}
+    </div>
+  `;
+}
+
+function renderConditionChecklist(conditions, allPassed) {
+  return `
+    <div class="onto-checklist">
+      ${conditions.map((c) => `
+        <div class="onto-check-item ${c.passed ? 'onto-check-pass' : 'onto-check-fail'}">
+          <span class="onto-check-icon">${c.passed ? '●' : '●'}</span>
+          <span class="onto-check-name">${c.name}</span>
+          <span class="onto-check-detail">${c.detail}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="onto-conditions-result ${allPassed ? 'onto-cond-pass' : 'onto-cond-fail'}">
+      ${allPassed ? '모든 조건 충족 - 실행 가능' : '일부 조건 미충족 - 실행 불가'}
+    </div>
+  `;
+}
+
+function bindOntologyEvents() {
+  // Seller select
+  const sellerSelect = document.getElementById('onto-seller-select');
+  if (sellerSelect) {
+    sellerSelect.addEventListener('change', () => {
+      ontologySelectedSeller = sellerSelect.value;
+      render();
+    });
+  }
+
+  // Action type select
+  const actionType = document.getElementById('onto-action-type');
+  if (actionType) {
+    actionType.addEventListener('change', () => {
+      ontologyActionType = actionType.value;
+      ontologyActionTarget = '';
+      render();
+    });
+  }
+
+  // Action target select
+  const actionTarget = document.getElementById('onto-action-target');
+  if (actionTarget) {
+    actionTarget.addEventListener('change', () => {
+      ontologyActionTarget = actionTarget.value;
+      render();
+    });
+  }
+
+  // Execute button
+  const executeBtn = document.getElementById('onto-action-execute-btn');
+  if (executeBtn) {
+    executeBtn.addEventListener('click', () => {
+      let result;
+      if (ontologyActionType === 'terminate') {
+        result = store.terminateContract(ontologyActionTarget);
+      } else if (ontologyActionType === 'renew') {
+        result = store.renewContract(ontologyActionTarget);
+      } else if (ontologyActionType === 'status') {
+        result = store.updateSellerStatus(ontologyActionTarget, '해지');
+      }
+
+      const resultEl = document.getElementById('onto-action-result');
+      if (resultEl && result) {
+        if (result.success) {
+          resultEl.innerHTML = '<div class="onto-result-success">실행 완료</div>';
+          setTimeout(() => render(), 800);
+        } else {
+          resultEl.innerHTML = `<div class="onto-result-fail">실행 실패: ${result.errors.join(', ')}</div>`;
+        }
+      }
+    });
+  }
+}
+
 // ── 이벤트 바인딩 ──
 function bindEvents() {
   // 탭 전환
@@ -1099,6 +1616,11 @@ function bindEvents() {
   // 내부 아키텍처 이벤트
   if (activeTab === 'architecture') {
     bindArchitectureEvents();
+  }
+
+  // 온톨로지 이벤트
+  if (activeTab === 'ontology') {
+    bindOntologyEvents();
   }
 
   // 레거시: 시작

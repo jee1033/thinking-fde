@@ -72,7 +72,7 @@ export function applySuggestion(store, suggestion) {
       if (suggestion.contractId) store.renewContract(suggestion.contractId);
       break;
     case '해지권고':
-      if (suggestion.contractId) store.terminateContract(suggestion.contractId);
+      if (suggestion.contractId) store.forceTerminateContract(suggestion.contractId);
       break;
   }
 }

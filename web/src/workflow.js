@@ -158,7 +158,7 @@ export class TerminationWorkflowEngine {
     wf.status = '완료';
 
     // Ontology 상태 반영
-    this.store.terminateContract(wf.contractId);
+    this.store.forceTerminateContract(wf.contractId);
   }
 
   /** 워크플로우 중단 */
