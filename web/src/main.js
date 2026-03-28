@@ -887,14 +887,6 @@ function bindEvents() {
     legacyGotoBtn.addEventListener('click', () => { activeTab = 'workflow'; render(); });
   }
 
-  // 연동 아키텍처: 상태 토글
-  document.querySelectorAll('[data-intg-toggle]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      integrationMonitor.toggleStatus(btn.dataset.intgToggle);
-      render();
-    });
-  });
-
   // 워크플로우: 액션
   document.querySelectorAll('[data-wf-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
