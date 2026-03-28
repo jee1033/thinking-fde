@@ -628,6 +628,389 @@ tr.urgency-green td:first-child { box-shadow: inset 3px 0 0 var(--urgency-green)
   font-size: 0.9rem;
 }
 
+/* ── Tab Bar ── */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.tab-btn {
+  padding: 8px 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+  color: var(--accent);
+}
+
+.tab-btn.active {
+  background: var(--card-bg);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Unsettled Badge ── */
+.unsettled-badge {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+/* ── Workflow Flow Diagram ── */
+.wf-flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.wf-flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.wf-flow-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.wf-flow-label {
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.wf-flow-arrow {
+  color: var(--border);
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Workflow Start Section ── */
+.wf-start-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.wf-start-section h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+.wf-seller-select {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wf-seller-select select {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+
+.btn-muted {
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.btn-muted:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* ── Workflow Cards ── */
+.wf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wf-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.wf-card.wf-blocked {
+  border-left: 4px solid #ef4444;
+}
+
+.wf-card.wf-completed {
+  opacity: 0.6;
+  border-left: 4px solid #22c55e;
+}
+
+.wf-card.wf-cancelled {
+  opacity: 0.5;
+  border-left: 4px solid var(--text-muted);
+}
+
+.wf-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wf-card-header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wf-id {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--mono, monospace);
+}
+
+.wf-seller-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wf-status-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.wf-status-active { background: #dbeafe; color: #1e40af; }
+.wf-status-done { background: #dcfce7; color: #166534; }
+.wf-status-cancelled { background: #f3f4f6; color: #6b7280; }
+
+@media (prefers-color-scheme: dark) {
+  .wf-status-active { background: #1e3a5f; color: #93c5fd; }
+  .wf-status-done { background: #14532d; color: #86efac; }
+  .wf-status-cancelled { background: #1f2937; color: #9ca3af; }
+}
+
+/* ── Progress Bar ── */
+.wf-progress {
+  position: relative;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  margin-bottom: 16px;
+  overflow: visible;
+}
+
+.wf-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.wf-progress-label {
+  position: absolute;
+  right: 0;
+  top: -18px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── Workflow Steps ── */
+.wf-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+.wf-step {
+  display: flex;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.wf-step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.wf-step-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.wf-step-icon.step-done {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.wf-step-icon.step-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.wf-step-icon.step-blocked {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.wf-step-icon.step-waiting {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.wf-step-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border);
+  min-height: 16px;
+}
+
+.wf-step-content {
+  padding-bottom: 16px;
+  flex: 1;
+}
+
+.wf-step-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-h);
+}
+
+.wf-step-current .wf-step-name {
+  color: var(--accent);
+}
+
+.wf-step-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.wf-step-blocked-reason {
+  font-size: 0.78rem;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wf-step-blocked-reason {
+    background: #450a0a;
+    color: #fca5a5;
+  }
+}
+
+.wf-step-date {
+  font-size: 0.72rem;
+  color: #22c55e;
+  margin-top: 2px;
+}
+
+/* ── Workflow Actions ── */
+.wf-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Footer ── */
 footer {
   margin-top: 24px;

@@ -14,21 +14,21 @@ const d = (daysOffset) => {
 
 /** @type {import('./ontology.js').SellerData[]} */
 export const sellers = [
-  { id: 'S001', name: '뷰티하우스', category: '뷰티', status: '활성', joinDate: '2023-03-15', lastSaleDate: d(-2), monthlySales: 45200000 },
-  { id: 'S002', name: '스킨랩코리아', category: '뷰티', status: '활성', joinDate: '2023-06-01', lastSaleDate: d(-5), monthlySales: 32800000 },
-  { id: 'S003', name: '오가닉팜', category: '식품', status: '활성', joinDate: '2022-11-20', lastSaleDate: d(-1), monthlySales: 67500000 },
-  { id: 'S004', name: '맛있는제과', category: '식품', status: '활성', joinDate: '2023-01-10', lastSaleDate: d(-3), monthlySales: 28900000 },
-  { id: 'S005', name: '홈리빙스토어', category: '리빙', status: '활성', joinDate: '2023-04-22', lastSaleDate: d(-7), monthlySales: 19300000 },
-  { id: 'S006', name: '코지홈데코', category: '리빙', status: '휴면', joinDate: '2022-08-15', lastSaleDate: d(-120), monthlySales: 2100000 },
-  { id: 'S007', name: '패션위크', category: '패션', status: '활성', joinDate: '2023-02-28', lastSaleDate: d(-4), monthlySales: 51600000 },
-  { id: 'S008', name: '스타일온', category: '패션', status: '휴면', joinDate: '2022-09-10', lastSaleDate: d(-95), monthlySales: 3200000 },
-  { id: 'S009', name: '건강한하루', category: '식품', status: '활성', joinDate: '2023-07-01', lastSaleDate: d(-2), monthlySales: 41200000 },
-  { id: 'S010', name: '프레시가든', category: '식품', status: '해지', joinDate: '2022-05-10', lastSaleDate: d(-200), monthlySales: 0 },
-  { id: 'S011', name: '럭셔리뷰티', category: '뷰티', status: '활성', joinDate: '2023-08-15', lastSaleDate: d(-1), monthlySales: 78300000 },
-  { id: 'S012', name: '데일리룩', category: '패션', status: '활성', joinDate: '2023-05-20', lastSaleDate: d(-6), monthlySales: 22700000 },
-  { id: 'S013', name: '인테리어플러스', category: '리빙', status: '휴면', joinDate: '2022-12-01', lastSaleDate: d(-110), monthlySales: 1500000 },
-  { id: 'S014', name: '네이처푸드', category: '식품', status: '활성', joinDate: '2023-09-01', lastSaleDate: d(-3), monthlySales: 35600000 },
-  { id: 'S015', name: '트렌드샵', category: '패션', status: '해지', joinDate: '2022-07-20', lastSaleDate: d(-180), monthlySales: 0 },
+  { id: 'S001', name: '뷰티하우스', category: '뷰티', status: '활성', joinDate: '2023-03-15', lastSaleDate: d(-2), monthlySales: 45200000, unsettledAmount: 0 },
+  { id: 'S002', name: '스킨랩코리아', category: '뷰티', status: '활성', joinDate: '2023-06-01', lastSaleDate: d(-5), monthlySales: 32800000, unsettledAmount: 4200000 },
+  { id: 'S003', name: '오가닉팜', category: '식품', status: '활성', joinDate: '2022-11-20', lastSaleDate: d(-1), monthlySales: 67500000, unsettledAmount: 0 },
+  { id: 'S004', name: '맛있는제과', category: '식품', status: '활성', joinDate: '2023-01-10', lastSaleDate: d(-3), monthlySales: 28900000, unsettledAmount: 1500000 },
+  { id: 'S005', name: '홈리빙스토어', category: '리빙', status: '활성', joinDate: '2023-04-22', lastSaleDate: d(-7), monthlySales: 19300000, unsettledAmount: 0 },
+  { id: 'S006', name: '코지홈데코', category: '리빙', status: '휴면', joinDate: '2022-08-15', lastSaleDate: d(-120), monthlySales: 2100000, unsettledAmount: 890000 },
+  { id: 'S007', name: '패션위크', category: '패션', status: '활성', joinDate: '2023-02-28', lastSaleDate: d(-4), monthlySales: 51600000, unsettledAmount: 0 },
+  { id: 'S008', name: '스타일온', category: '패션', status: '휴면', joinDate: '2022-09-10', lastSaleDate: d(-95), monthlySales: 3200000, unsettledAmount: 2300000 },
+  { id: 'S009', name: '건강한하루', category: '식품', status: '활성', joinDate: '2023-07-01', lastSaleDate: d(-2), monthlySales: 41200000, unsettledAmount: 0 },
+  { id: 'S010', name: '프레시가든', category: '식품', status: '해지', joinDate: '2022-05-10', lastSaleDate: d(-200), monthlySales: 0, unsettledAmount: 0 },
+  { id: 'S011', name: '럭셔리뷰티', category: '뷰티', status: '활성', joinDate: '2023-08-15', lastSaleDate: d(-1), monthlySales: 78300000, unsettledAmount: 0 },
+  { id: 'S012', name: '데일리룩', category: '패션', status: '활성', joinDate: '2023-05-20', lastSaleDate: d(-6), monthlySales: 22700000, unsettledAmount: 0 },
+  { id: 'S013', name: '인테리어플러스', category: '리빙', status: '휴면', joinDate: '2022-12-01', lastSaleDate: d(-110), monthlySales: 1500000, unsettledAmount: 560000 },
+  { id: 'S014', name: '네이처푸드', category: '식품', status: '활성', joinDate: '2023-09-01', lastSaleDate: d(-3), monthlySales: 35600000, unsettledAmount: 0 },
+  { id: 'S015', name: '트렌드샵', category: '패션', status: '해지', joinDate: '2022-07-20', lastSaleDate: d(-180), monthlySales: 0, unsettledAmount: 0 },
 ];
 
 /** @type {import('./ontology.js').ContractData[]} */
