@@ -426,6 +426,213 @@ function renderSuggestion(s, index) {
   `;
 }
 
+// ── 내부 아키텍처 탭 ──
+function connectorDotClass(status) {
+  const map = { connected: 'dot-connected', syncing: 'dot-syncing', connecting: 'dot-syncing', error: 'dot-error', disconnected: 'dot-disconnected' };
+  return map[status] || 'dot-disconnected';
+}
+
+function connectorStatusLabel(status) {
+  const map = { connected: '연결됨', syncing: '동기화중', connecting: '연결중...', error: '오류', disconnected: '미연결' };
+  return map[status] || status;
+}
+
+function pipelineStageIcon(status) {
+  const map = { idle: '○', running: '◉', completed: '✓', error: '!' };
+  return map[status] || '○';
+}
+
+function pipelineStageClass(status) {
+  const map = { idle: 'pstage-idle', running: 'pstage-running', completed: 'pstage-done', error: 'pstage-error' };
+  return map[status] || 'pstage-idle';
+}
+
+function renderArchitectureTab() {
+  const statuses = connectorManager.getStatus();
+  const pipelineProgress = dataPipeline.getProgress();
+  const allLogs = [...connectorManager.getLogs(), ...dataPipeline.getLogs()]
+    .sort((a, b) => b.time.localeCompare(a.time))
+    .slice(0, 50);
+
+  const connectedCount = statuses.filter((s) => s.status === 'connected' || s.status === 'syncing').length;
+
+  return `
+    <!-- 1. 시스템 아키텍처 라이브 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>시스템 아키텍처</h2>
+        <span class="concept-tag">Live Architecture</span>
+      </div>
+
+      <div class="arch-layers">
+        <div class="arch-layer arch-layer-4">
+          <span class="arch-layer-num">4</span>
+          <div class="arch-layer-info">
+            <div class="arch-layer-name">Workshop UI</div>
+            <div class="arch-layer-desc">현재 화면 — 5개 탭, 실시간 데이터 렌더링</div>
+          </div>
+          <span class="arch-layer-status arch-status-ok">활성</span>
+        </div>
+        <div class="arch-layer arch-layer-3">
+          <span class="arch-layer-num">3</span>
+          <div class="arch-layer-info">
+            <div class="arch-layer-name">Workflow Engine</div>
+            <div class="arch-layer-desc">해지 프로세스 6단계 상태 머신</div>
+          </div>
+          <span class="arch-layer-status arch-status-ok">${workflowEngine.getAll().filter((w) => w.status === '진행중').length}건 진행중</span>
+        </div>
+        <div class="arch-layer arch-layer-2">
+          <span class="arch-layer-num">2</span>
+          <div class="arch-layer-info">
+            <div class="arch-layer-name">Ontology Store</div>
+            <div class="arch-layer-desc">통합 데이터 모델 (Seller ↔ Contract)</div>
+          </div>
+          <span class="arch-layer-status arch-status-ok">Sellers: ${store.getAllSellers().length} | Contracts: ${store.getAllContracts().length}</span>
+        </div>
+        <div class="arch-layer arch-layer-1">
+          <span class="arch-layer-num">1</span>
+          <div class="arch-layer-info">
+            <div class="arch-layer-name">Connector Layer</div>
+            <div class="arch-layer-desc">레거시 시스템 어댑터</div>
+          </div>
+          <div class="arch-connector-dots">
+            ${statuses.map((s) => `<span class="arch-dot ${connectorDotClass(s.status)}" title="${s.name}: ${connectorStatusLabel(s.status)}">${s.name.charAt(0)}</span>`).join('')}
+          </div>
+          <span class="arch-layer-status ${connectedCount > 0 ? 'arch-status-ok' : 'arch-status-off'}">${connectedCount}/${statuses.length} 연결</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 커넥터 상태 패널 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>커넥터 상태</h2>
+        <span class="concept-tag">Connector Layer</span>
+      </div>
+      <div class="arch-actions-bar">
+        <button class="btn btn-primary" id="arch-connect-all-btn">전체 연결</button>
+        <button class="btn btn-primary" id="arch-sync-all-btn">전체 동기화</button>
+      </div>
+      <div class="connector-panel">
+        ${statuses.map((s) => `
+          <div class="connector-card">
+            <div class="connector-card-header">
+              <span class="connector-dot ${connectorDotClass(s.status)}"></span>
+              <span class="connector-name">${s.name}</span>
+              <span class="connector-status-label">${connectorStatusLabel(s.status)}</span>
+            </div>
+            <div class="connector-meta">
+              <div><strong>타입:</strong> ${s.type}</div>
+              <div class="connector-endpoint">${s.endpoint}</div>
+              ${s.lastSync ? `<div><strong>마지막 동기화:</strong> ${s.lastSync} (${s.syncCount}회)</div>` : ''}
+            </div>
+            <div class="connector-actions">
+              ${s.status === 'disconnected' ? `<button class="btn btn-sm btn-primary" data-arch-connect="${s.id}">연결</button>` : ''}
+              ${s.status === 'connected' ? `
+                <button class="btn btn-sm btn-primary" data-arch-sync="${s.id}">동기화</button>
+                <button class="btn btn-sm btn-muted" data-arch-disconnect="${s.id}">해제</button>
+              ` : ''}
+              ${s.status === 'error' ? `<button class="btn btn-sm btn-primary" data-arch-connect="${s.id}">재연결</button>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <!-- 3. 데이터 파이프라인 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>데이터 파이프라인</h2>
+        <span class="concept-tag">Pipeline Builder</span>
+      </div>
+      <div class="pipeline-viz">
+        ${pipelineProgress.stages.map((stage, i) => `
+          <div class="pipeline-stage ${pipelineStageClass(stage.status)}">
+            <div class="pipeline-stage-icon ${pipelineStageClass(stage.status)}">${pipelineStageIcon(stage.status)}</div>
+            <div class="pipeline-stage-name">${stage.name}</div>
+            <div class="pipeline-stage-desc">${stage.description}</div>
+            <div class="pipeline-stage-bar">
+              <div class="pipeline-stage-fill" style="width: ${stage.progress}%"></div>
+            </div>
+          </div>
+          ${i < pipelineProgress.stages.length - 1 ? '<div class="pipeline-arrow">→</div>' : ''}
+        `).join('')}
+      </div>
+      <div class="pipeline-action-bar">
+        <button class="btn btn-primary" id="arch-pipeline-btn" ${dataPipeline.status === 'running' ? 'disabled' : ''}>
+          ${dataPipeline.status === 'running' ? '실행중...' : '파이프라인 실행'}
+        </button>
+        <span class="pipeline-run-info">
+          ${dataPipeline.runCount > 0 ? `${dataPipeline.runCount}회 실행 | 상태: ${dataPipeline.status}` : '아직 실행되지 않음'}
+        </span>
+      </div>
+    </section>
+
+    <!-- 4. 실시간 로그 -->
+    <section class="section">
+      <div class="section-header">
+        <h2>실시간 로그</h2>
+      </div>
+      <div class="live-log" id="arch-log">
+        ${allLogs.length > 0 ? allLogs.map((l) => `
+          <div class="log-entry log-${l.level}">
+            <span class="log-time">${l.time}</span>
+            <span class="log-source">${l.source}</span>
+            <span class="log-msg">${l.msg}</span>
+          </div>
+        `).join('') : '<div class="empty-msg">로그가 없습니다. 커넥터를 연결하거나 파이프라인을 실행해보세요.</div>'}
+      </div>
+    </section>
+  `;
+}
+
+function renderArchitectureTabInPlace() {
+  const main = document.querySelector('main');
+  if (main && activeTab === 'architecture') {
+    main.innerHTML = renderArchitectureTab();
+    bindArchitectureEvents();
+  }
+}
+
+function bindArchitectureEvents() {
+  // 전체 연결
+  const connectAllBtn = document.getElementById('arch-connect-all-btn');
+  if (connectAllBtn) {
+    connectAllBtn.addEventListener('click', () => { connectorManager.connectAll(); });
+  }
+  // 전체 동기화
+  const syncAllBtn = document.getElementById('arch-sync-all-btn');
+  if (syncAllBtn) {
+    syncAllBtn.addEventListener('click', () => { connectorManager.syncAll(); });
+  }
+  // 개별 연결
+  document.querySelectorAll('[data-arch-connect]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const c = connectorManager.getConnector(btn.dataset.archConnect);
+      if (c) { await c.connect(); renderArchitectureTabInPlace(); }
+    });
+  });
+  // 개별 동기화
+  document.querySelectorAll('[data-arch-sync]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const c = connectorManager.getConnector(btn.dataset.archSync);
+      if (c) { await c.sync(); renderArchitectureTabInPlace(); }
+    });
+  });
+  // 개별 해제
+  document.querySelectorAll('[data-arch-disconnect]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const c = connectorManager.getConnector(btn.dataset.archDisconnect);
+      if (c) { c.disconnect(); renderArchitectureTabInPlace(); }
+    });
+  });
+  // 파이프라인 실행
+  const pipelineBtn = document.getElementById('arch-pipeline-btn');
+  if (pipelineBtn) {
+    pipelineBtn.addEventListener('click', () => { dataPipeline.run(); });
+  }
+}
+
 // ── 연동 아키텍처 탭 ──
 function renderIntegrationTab() {
   const allConnectors = integrationMonitor.getAll();
@@ -879,6 +1086,11 @@ function bindEvents() {
       render();
     });
   });
+
+  // 내부 아키텍처 이벤트
+  if (activeTab === 'architecture') {
+    bindArchitectureEvents();
+  }
 
   // 레거시: 시작
   const legacyStartBtn = document.getElementById('legacy-start-btn');

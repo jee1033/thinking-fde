@@ -1011,6 +1011,294 @@ tr.urgency-green td:first-child { box-shadow: inset 3px 0 0 var(--urgency-green)
   border-top: 1px solid var(--border);
 }
 
+/* ── Internal Architecture Tab ── */
+.arch-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 8px;
+}
+
+.arch-layer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.arch-layer:last-child { border-bottom: none; }
+
+.arch-layer-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.arch-layer-4 .arch-layer-num { background: #6366f1; }
+.arch-layer-3 .arch-layer-num { background: #0891b2; }
+.arch-layer-2 .arch-layer-num { background: #059669; }
+.arch-layer-1 .arch-layer-num { background: #d97706; }
+
+.arch-layer-info { flex: 1; }
+.arch-layer-name { font-weight: 700; font-size: 0.9rem; color: var(--text-h); }
+.arch-layer-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+.arch-layer-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.arch-status-ok { background: #dcfce7; color: #166534; }
+.arch-status-off { background: #f3f4f6; color: #6b7280; }
+
+@media (prefers-color-scheme: dark) {
+  .arch-status-ok { background: #14532d; color: #86efac; }
+  .arch-status-off { background: #1f2937; color: #9ca3af; }
+}
+
+.arch-connector-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.arch-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dot-connected, .arch-dot.dot-connected { background: #22c55e; }
+.dot-syncing, .arch-dot.dot-syncing { background: #f59e0b; animation: pulse 1s infinite; }
+.dot-error, .arch-dot.dot-error { background: #ef4444; }
+.dot-disconnected, .arch-dot.dot-disconnected { background: #9ca3af; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Architecture Actions Bar ── */
+.arch-actions-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── Connector Panel ── */
+.connector-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.connector-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.connector-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connector-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connector-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-h);
+}
+
+.connector-status-label {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.connector-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connector-endpoint {
+  font-family: monospace;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.connector-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Pipeline Visualization ── */
+.pipeline-viz {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.pipeline-stage {
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  padding: 12px;
+}
+
+.pipeline-stage-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 0 auto 8px;
+  border: 2px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+}
+
+.pipeline-stage-icon.pstage-done { background: #22c55e; border-color: #22c55e; color: #fff; }
+.pipeline-stage-icon.pstage-running { background: var(--accent); border-color: var(--accent); color: #fff; animation: pulse 1s infinite; }
+.pipeline-stage-icon.pstage-error { background: #ef4444; border-color: #ef4444; color: #fff; }
+
+.pipeline-stage-name { font-weight: 700; font-size: 0.85rem; color: var(--text-h); }
+.pipeline-stage-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+.pipeline-stage-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.pipeline-stage-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.2s;
+}
+
+.pstage-done .pipeline-stage-fill { background: #22c55e; }
+
+.pipeline-arrow {
+  display: flex;
+  align-items: center;
+  padding-top: 20px;
+  color: var(--border);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.pipeline-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pipeline-run-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Live Log ── */
+.live-log {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+.log-entry {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+}
+
+.log-entry:last-child { border-bottom: none; }
+
+.log-time {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.log-source {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.log-msg { color: var(--text); flex: 1; }
+.log-success .log-msg { color: #22c55e; }
+.log-error .log-msg { color: #ef4444; }
+
+@media (max-width: 640px) {
+  .connector-panel { grid-template-columns: 1fr; }
+  .pipeline-viz { flex-direction: column; align-items: stretch; }
+  .pipeline-arrow { justify-content: center; padding: 4px 0; }
+  .pipeline-stage { min-width: auto; }
+}
+
 /* ── Integration Architecture Tab ── */
 
 /* Diagram */
