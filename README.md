@@ -20,7 +20,16 @@
 
 - `.github/workflows/codex-pr-review.yml`
 
-### 3) 커스터마이징 포인트
+### 3) 실패 방지(중요)
+
+다음 조건에서는 워크플로우가 **실패하지 않고 자동 skip** 되도록 설정되어 있습니다.
+
+- `OPENAI_API_KEY` 시크릿이 없는 경우
+- 포크(fork)에서 올라온 PR인 경우 (보안/시크릿 노출 방지)
+
+즉, 체크가 실패로 떨어지기보다 스킵으로 표시됩니다.
+
+### 4) 커스터마이징 포인트
 
 - 리뷰 프롬프트: `.github/workflows/codex-pr-review.yml`의 `prompt` 영역
 - 권한: `permissions` 블록에서 최소 권한 원칙으로 조정

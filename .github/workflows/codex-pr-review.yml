@@ -6,6 +6,7 @@ on:
 
 jobs:
   codex_review:
+    if: github.event.pull_request.head.repo.fork == false && secrets.OPENAI_API_KEY != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
