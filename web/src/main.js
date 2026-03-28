@@ -5,12 +5,27 @@ import { runAIPRules, applySuggestion } from './aip-logic.js';
 import { TerminationWorkflowEngine } from './workflow.js';
 import { legacySystems, legacySteps, LegacySimulation } from './legacy.js';
 import { connectors, workflowIntegrations, IntegrationMonitor } from './integration.js';
+import { ConnectorManager } from './connectors.js';
+import { DataPipeline } from './pipeline.js';
 
 // ── Ontology Store 초기화 ──
 const store = new OntologyStore(sellers, contracts);
 const workflowEngine = new TerminationWorkflowEngine(store);
 const legacySim = new LegacySimulation();
 const integrationMonitor = new IntegrationMonitor();
+const connectorManager = new ConnectorManager();
+const dataPipeline = new DataPipeline(connectorManager, store, runAIPRules);
+
+// 파이프라인 상태 변경 시 재렌더링
+dataPipeline.onUpdate = () => {
+  if (activeTab === 'architecture') renderArchitectureTabInPlace();
+};
+connectorManager.onStatusChange = () => {
+  if (activeTab === 'architecture') renderArchitectureTabInPlace();
+};
+connectorManager.onLog = () => {
+  if (activeTab === 'architecture') renderArchitectureTabInPlace();
+};
 
 // ── 유틸 ──
 const fmt = (n) => n.toLocaleString('ko-KR');
@@ -71,13 +86,14 @@ function render() {
       <nav class="tab-bar">
         <button class="tab-btn ${activeTab === 'legacy' ? 'active' : ''}" data-tab="legacy">기존 시스템</button>
         <button class="tab-btn ${activeTab === 'integration' ? 'active' : ''}" data-tab="integration">연동 아키텍처</button>
+        <button class="tab-btn ${activeTab === 'architecture' ? 'active' : ''}" data-tab="architecture">내부 아키텍처</button>
         <button class="tab-btn ${activeTab === 'dashboard' ? 'active' : ''}" data-tab="dashboard">대시보드</button>
         <button class="tab-btn ${activeTab === 'workflow' ? 'active' : ''}" data-tab="workflow">해지 워크플로우</button>
       </nav>
     </header>
 
     <main>
-      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'integration' ? renderIntegrationTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
+      ${activeTab === 'legacy' ? renderLegacyTab() : activeTab === 'integration' ? renderIntegrationTab() : activeTab === 'architecture' ? renderArchitectureTab() : activeTab === 'dashboard' ? renderDashboard() : renderWorkflowTab()}
     </main>
 
     <footer>
